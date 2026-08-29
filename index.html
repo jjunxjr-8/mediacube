@@ -3,121 +3,346 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Tag-Sorted Content List</title>
+    <title>COSMOS MEDIACUBE</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <script src="./config.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+<body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-slate-900">Content Library</h1>
-            <p class="text-slate-600 mt-2">Filter and sort articles by their tags.</p>
-        </header>
+    <!-- Top Navigation / Header -->
+    <header class="w-full px-8 py-6 flex items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-40">
+        <button id="home-btn" class="text-xl font-semibold tracking-wider text-gray-900 hover:text-blue-600 transition text-left flex items-center gap-2">
+            COSMOS MEDIACUBE
+        </button>
+        
+        <div class="flex items-center gap-4">
+            <!-- Upload Button (Hidden until logged in) -->
+            <label id="upload-container" class="hidden cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
+                <span>Upload Media</span>
+                <input type="file" id="file-upload" accept="application/pdf,image/*" class="hidden">
+            </label>
 
-        <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 gap-4">
-            <div id="tag-filters" class="flex flex-wrap gap-2">
-                </div>
-
-            <div class="w-full sm:w-auto">
-                <select id="sort-select" class="w-full sm:w-auto border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="default">Sort By</option>
-                    <option value="title-asc">Title (A - Z)</option>
-                    <option value="title-desc">Title (Z - A)</option>
-                </select>
+            <!-- Auth Status / Login Button -->
+            <div id="auth-section">
+                <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition">
+                    Log In / Sign Up
+                </button>
             </div>
         </div>
 
-        <div id="content-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- PDF Pagination Controls -->
+        <div id="navigation-controls" class="hidden items-center gap-3">
+            <button id="prev-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">Previous</button>
+            <span class="text-sm text-gray-600">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+            <button id="next-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">Next</button>
+        </div>
+    </header>
+
+    <!-- Auth Modal -->
+    <div id="auth-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button id="close-auth-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            <h3 id="auth-title" class="text-xl font-bold mb-6 text-gray-900">Log In to Upload</h3>
+            
+            <form id="auth-form" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1.5 font-medium">Email</label>
+                    <input type="email" id="auth-email" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:border-blue-600 outline-none transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1.5 font-medium">Password</label>
+                    <input type="password" id="auth-password" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:border-blue-600 outline-none transition">
+                </div>
+                <button type="submit" id="auth-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition text-sm shadow-sm mt-2">
+                    Log In
+                </button>
+            </form>
+
+            <div class="mt-6 text-center text-xs text-gray-500">
+                <span id="auth-toggle-text">Don't have an account?</span>
+                <button id="auth-toggle-mode" class="text-blue-600 hover:underline ml-1 font-semibold">Sign Up</button>
             </div>
+        </div>
     </div>
 
-    <script>
-        let allData = [];
-        let currentTag = 'All';
-        let currentSort = 'default';
-
-        const container = document.getElementById('content-container');
-        const tagFiltersContainer = document.getElementById('tag-filters');
-        const sortSelect = document.getElementById('sort-select');
-
-        // Fetch JSON data on page load
-        async function loadContent() {
-            try {
-                const response = await fetch('content.json');
-                if (!response.ok) throw new Error('Failed to load JSON data');
-                allData = await response.json();
-                
-                generateTagFilters();
-                renderAndSort();
-            } catch (error) {
-                container.innerHTML = `<p class="text-red-500 col-span-2 text-center">Error loading content: ${error.message}. Make sure you are running via a local server (e.g., Live Server).</p>`;
-            }
-        }
-
-        // Dynamically create tag filter buttons based on JSON contents
-        function generateTagFilters() {
-            const tags = ['All', ...new Set(allData.map(item => item.tag))];
+    <!-- Main Content Area -->
+    <main class="flex-1 flex flex-col items-center p-8 overflow-auto">
+        
+        <!-- Hero Section with Centered Search Bar -->
+        <div id="homescreen-view" class="w-full max-w-7xl flex flex-col items-center my-auto min-h-[70vh] justify-center transition-all">
+            <h1 class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">Societies and Enterprises</h1>
+            <p class="text-sm text-gray-500 mb-8">Powered by COSMOS MEDIACUBE</p>
             
-            tagFiltersContainer.innerHTML = tags.map(tag => `
-                <button onclick="setTag('${tag}')" 
-                    class="px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                        currentTag === tag 
-                        ? 'bg-blue-600 text-white shadow-sm' 
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }">
-                    ${tag}
-                </button>
-            `).join('');
+            <!-- Search Bar in the center -->
+            <div class="w-full max-w-xl mb-12">
+                <input type="text" id="search-input" placeholder="Search..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
+            </div>
+
+            <!-- Scroll Indicator Prompt -->
+            <div id="scroll-prompt" class="text-xs text-gray-400 animate-bounce mt-8 flex flex-col items-center gap-1">
+                <span>Scroll down to view files</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+        </div>
+
+        <!-- 6 by 5 Grid Section (Hidden initially, revealed on scroll) -->
+        <div id="grid-container" class="w-full max-w-7xl px-4 py-12 opacity-0 translate-y-10 transition-all duration-700 pointer-events-none">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b border-gray-100 pb-3">Available Files</h2>
+            <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
+        </div>
+
+        <!-- Reader / Viewer View -->
+        <div id="reader-view" class="hidden flex-col items-center justify-center w-full h-full my-auto">
+            <div id="pdf-container" class="hidden shadow-2xl bg-white rounded-xl overflow-hidden border border-gray-200">
+                <canvas id="pdf-canvas"></canvas>
+            </div>
+            <img id="media-img" class="hidden max-h-[75vh] max-w-full shadow-2xl rounded-xl object-contain bg-gray-100" alt="Media Preview">
+        </div>
+    </main>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        // Pull from the environment config file
+        const SUPABASE_URL = window.ENV.SUPABASE_URL;
+        const SUPABASE_ANON_KEY = window.ENV.SUPABASE_ANON_KEY;
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = 1.5;
+        let isSignUpMode = false;
+        let allFiles = []; 
+        let hasRevealedGrid = false;
+        const canvas = document.getElementById('pdf-canvas');
+        const ctx = canvas.getContext('2d');
+        const imgElement = document.getElementById('media-img');
+
+        // Scroll listener to reveal the 6x5 grid
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 40 && !hasRevealedGrid) {
+                hasRevealedGrid = true;
+                const grid = document.getElementById('grid-container');
+                grid.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                document.getElementById('scroll-prompt').style.opacity = '0';
+            } else if (window.scrollY <= 10 && hasRevealedGrid) {
+                // Optional: reset if scrolled right back to the very top
+                // hasRevealedGrid = false;
+            }
+        });
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/"/g, "&quot;")
+                      .replace(/'/g, "&#039;");
         }
 
-        // Filter and Sort Handler
-        function renderAndSort() {
-            // 1. Filter by Tag
-            let filtered = currentTag === 'All' 
-                ? [...allData] 
-                : allData.filter(item => item.tag === currentTag);
+        async function checkUserSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            updateAuthUI(session);
+        }
 
-            // 2. Sort Items
-            if (currentSort === 'title-asc') {
-                filtered.sort((a, b) => a.title.localeCompare(b.title));
-            } else if (currentSort === 'title-desc') {
-                filtered.sort((a, b) => b.title.localeCompare(a.title));
+        supabase.auth.onAuthStateChange((event, session) => {
+            updateAuthUI(session);
+        });
+
+        function updateAuthUI(session) {
+            const authSection = document.getElementById('auth-section');
+            const uploadContainer = document.getElementById('upload-container');
+
+            if (session) {
+                authSection.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs text-gray-600 hidden sm:inline font-medium">${escapeHtml(session.user.email)}</span>
+                        <button id="logout-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl text-xs font-medium transition">Log Out</button>
+                    </div>
+                `;
+                uploadContainer.classList.remove('hidden');
+                document.getElementById('logout-btn').addEventListener('click', async () => {
+                    await supabase.auth.signOut();
+                });
+            } else {
+                authSection.innerHTML = `
+                    <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition">
+                        Log In / Sign Up
+                    </button>
+                `;
+                uploadContainer.classList.add('hidden');
+                document.getElementById('open-auth-modal').addEventListener('click', () => {
+                    document.getElementById('auth-modal').classList.remove('hidden');
+                });
             }
+        }
 
-            // 3. Render to DOM
-            if (filtered.length === 0) {
-                container.innerHTML = `<p class="text-slate-500 col-span-2 text-center py-8">No content found for this tag.</p>`;
+        document.getElementById('close-auth-modal').addEventListener('click', () => {
+            document.getElementById('auth-modal').classList.add('hidden');
+        });
+
+        document.getElementById('auth-toggle-mode').addEventListener('click', () => {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('auth-title').textContent = isSignUpMode ? 'Create an Account' : 'Log In to Upload';
+            document.getElementById('auth-submit-btn').textContent = isSignUpMode ? 'Sign Up' : 'Log In';
+            document.getElementById('auth-toggle-text').textContent = isSignUpMode ? 'Already have an account?' : "Don't have an account?";
+            document.getElementById('auth-toggle-mode').textContent = isSignUpMode ? 'Log In' : 'Sign Up';
+        });
+
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+
+            if (isSignUpMode) {
+                const { error } = await supabase.auth.signUp({ email, password });
+                if (error) alert('Sign up failed: ' + error.message);
+                else {
+                    alert('Check your email for confirmation or log in if confirmation is disabled.');
+                    document.getElementById('auth-modal').classList.add('hidden');
+                }
+            } else {
+                const { error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) alert('Login failed: ' + error.message);
+                else {
+                    document.getElementById('auth-modal').classList.add('hidden');
+                }
+            }
+        });
+
+        async function loadPublicLibrary() {
+            const { data, error } = await supabase.from('pdf_files').select('*').order('created_at', { ascending: false });
+            if (error) {
+                console.error('Error loading library:', error.message);
+                return;
+            }
+            allFiles = data || [];
+            renderFiles(allFiles);
+        }
+
+        function renderFiles(files) {
+            const listEl = document.getElementById('pdf-list');
+            if (!files || files.length === 0) {
+                listEl.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400"><p class="text-sm">No media files found.</p></div>`;
                 return;
             }
 
-            container.innerHTML = filtered.map(item => `
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div>
-                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 mb-2">
-                            ${item.tag}
-                        </span>
-                        <h2 class="text-lg font-bold text-slate-900">${item.title}</h2>
-                        <p class="text-slate-600 text-sm mt-1">${item.description}</p>
+            listEl.innerHTML = files.map(file => {
+                const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
+                const badgeText = isImage ? 'Image' : 'PDF';
+                const badgeColor = isImage ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200';
+                const safeName = escapeHtml(file.name);
+
+                return `
+                    <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:border-blue-400 hover:shadow transition flex flex-col justify-between gap-4 group">
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
+                            <h3 class="font-medium text-gray-800 text-sm truncate mt-1" title="${safeName}">${safeName}</h3>
+                        </div>
+                        <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn w-full bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-lg transition font-medium border border-gray-200 group-hover:border-blue-600">
+                            View File
+                        </button>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
+
+            document.querySelectorAll('.read-btn').forEach(btn => {
+                btn.addEventListener('click', () => openMedia(btn.getAttribute('data-url'), btn.getAttribute('data-name')));
+            });
         }
 
-        // Update tag state and refresh UI
-        window.setTag = function(tag) {
-            currentTag = tag;
-            generateTagFilters();
-            renderAndSort();
-        }
-
-        // Listen to sort dropdown changes
-        sortSelect.addEventListener('change', (e) => {
-            currentSort = e.target.value;
-            renderAndSort();
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = allFiles.filter(file => file.name.toLowerCase().includes(query));
+            renderFiles(filtered);
         });
 
-        // Initialize script
-        loadContent();
+        document.getElementById('file-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const filePath = `${Date.now()}_${sanitizedName}`;
+
+            const { error: uploadError } = await supabase.storage.from('pdfs').upload(filePath, file);
+            if (uploadError) {
+                alert('Upload failed: ' + uploadError.message);
+                return;
+            }
+
+            const { data: publicUrlData } = supabase.storage.from('pdfs').getPublicUrl(filePath);
+            const { error: dbError } = await supabase.from('pdf_files').insert([{
+                name: file.name,
+                file_url: publicUrlData.publicUrl
+            }]);
+
+            if (dbError) {
+                alert('Database save failed: ' + dbError.message);
+                return;
+            }
+
+            loadPublicLibrary();
+        });
+
+        async function openMedia(url, name) {
+            document.getElementById('homescreen-view').classList.add('hidden');
+            document.getElementById('grid-container').classList.add('hidden');
+            document.getElementById('reader-view').classList.remove('hidden');
+            document.getElementById('reader-view').classList.add('flex');
+
+            const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(name);
+
+            if (isImage) {
+                canvas.parentElement.classList.add('hidden');
+                imgElement.src = url;
+                imgElement.classList.remove('hidden');
+                document.getElementById('navigation-controls').classList.add('hidden');
+            } else {
+                imgElement.classList.add('hidden');
+                canvas.parentElement.classList.remove('hidden');
+                document.getElementById('navigation-controls').classList.remove('hidden');
+                document.getElementById('navigation-controls').classList.add('flex');
+
+                pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+                    pdfDoc = pdfDoc_;
+                    document.getElementById('total-pages').textContent = pdfDoc.numPages;
+                    pageNum = 1;
+                    renderPage(pageNum);
+                }).catch(err => alert('Error loading PDF: ' + err.message));
+            }
+        }
+
+        function renderPage(num) {
+            pageRendering = true;
+            pdfDoc.getPage(num).then(function(page) {
+                const viewport = page.getViewport({ scale: scale });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+                page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
+                    pageRendering = false;
+                    if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
+                });
+            });
+            document.getElementById('current-page').textContent = num;
+        }
+
+        document.getElementById('prev-page').addEventListener('click', () => { if (pageNum > 1) renderPage(--pageNum); });
+        document.getElementById('next-page').addEventListener('click', () => { if (pageNum < pdfDoc.numPages) renderPage(++pageNum); });
+        
+        document.getElementById('home-btn').addEventListener('click', () => {
+            document.getElementById('reader-view').classList.add('hidden');
+            document.getElementById('navigation-controls').classList.add('hidden');
+            document.getElementById('homescreen-view').classList.remove('hidden');
+            document.getElementById('grid-container').classList.remove('hidden');
+            imgElement.src = '';
+            document.getElementById('search-input').value = '';
+            loadPublicLibrary();
+        });
+
+        checkUserSession();
+        loadPublicLibrary();
     </script>
 </body>
 </html>
