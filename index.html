@@ -19,6 +19,11 @@
         </button>
         
         <div class="flex items-center gap-4">
+            <!-- My Page Button (Hidden until logged in) -->
+            <button id="mypage-btn" class="hidden bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
+                My Page
+            </button>
+
             <!-- Upload Button (Hidden until logged in) -->
             <label id="upload-container" class="hidden cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
                 <span>Upload Media</span>
@@ -73,18 +78,18 @@
         
         <!-- Hero Section with Centered Search Bar -->
         <div id="homescreen-view" class="w-full max-w-4xl flex flex-col items-center mt-12 transition-all">
-            <h1 class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">MEDIA CUBE</h1>
-            <p class="text-sm text-gray-500 mb-8">Powered by COSMOS</p>
+            <h1 id="view-title" class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">MEDIA CUBE</h1>
+            <p id="view-subtitle" class="text-sm text-gray-500 mb-8">Powered by COSMOS</p>
             
             <!-- Search Bar and Subtext Container -->
-            <div class="w-full flex flex-col items-center mb-8 px-4">
+            <div id="search-container" class="w-full flex flex-col items-center mb-8 px-4">
                 <div class="w-full relative">
                     <input type="text" id="search-input" placeholder="Search files..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
                 </div>
-                <p class="text-[11px] font-light uppercase tracking-widest text-gray-400 mt-3 pt-1 text-center w-full">THE NEW HUB BY COSMOS <br> BECAUSE PUBLICATION SHOULDN'T BE A MONOPOLY</p>
+                <p class="text-[11px] font-light uppercase tracking-widest text-gray-400 mt-3 pt-1 text-center w-full">BECAUSE PUBLICATION SHOULDN'T BE A MONOPOLY</p>
             </div>
 
-            <!-- 5 Files Displayed Side-by-Side as Small Squares -->
+            <!-- Files Displayed Container -->
             <div id="files-section" class="w-full flex flex-col gap-3 transition-all duration-300">
                 <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full"></div>
             </div>
@@ -114,12 +119,14 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
         const SUPABASE_URL = 'https://vyfyhxirpmptnoipzsvm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let pdfDoc = null, pageNum = 1;
         let isSignUpMode = false;
         let allFiles = []; 
+        let currentViewMode = 'home'; // 'home' or 'mypage'
+        let currentUserEmail = null;
         
         const canvasLeft = document.getElementById('pdf-canvas-left');
         const ctxLeft = canvasLeft.getContext('2d');
@@ -152,16 +159,19 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
         async function checkUserSession() {
             const { data: { session } } = await supabase.auth.getSession();
+            currentUserEmail = session ? session.user.email : null;
             updateAuthUI(session);
         }
 
         supabase.auth.onAuthStateChange((event, session) => {
+            currentUserEmail = session ? session.user.email : null;
             updateAuthUI(session);
         });
 
         function updateAuthUI(session) {
             const authSection = document.getElementById('auth-section');
             const uploadContainer = document.getElementById('upload-container');
+            const myPageBtn = document.getElementById('mypage-btn');
 
             if (session) {
                 authSection.innerHTML = `
@@ -171,8 +181,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                     </div>
                 `;
                 uploadContainer.classList.remove('hidden');
+                myPageBtn.classList.remove('hidden');
                 document.getElementById('logout-btn').addEventListener('click', async () => {
                     await supabase.auth.signOut();
+                    switchToHome();
                 });
             } else {
                 authSection.innerHTML = `
@@ -181,6 +193,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                     </button>
                 `;
                 uploadContainer.classList.add('hidden');
+                myPageBtn.classList.add('hidden');
+                if (currentViewMode === 'mypage') switchToHome();
                 document.getElementById('open-auth-modal').addEventListener('click', () => {
                     document.getElementById('auth-modal').classList.remove('hidden');
                 });
@@ -227,7 +241,15 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 return;
             }
             allFiles = data || [];
-            renderFiles(allFiles.slice(0, 5));
+            refreshCurrentView();
+        }
+
+        function refreshCurrentView() {
+            if (currentViewMode === 'mypage') {
+                renderMyPage();
+            } else {
+                renderFiles(allFiles.slice(0, 5));
+            }
         }
 
         function renderFiles(files) {
@@ -247,9 +269,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 return `
                     <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm hover:border-blue-400 hover:shadow transition flex flex-col justify-between aspect-square group">
                         <div class="flex flex-col gap-1.5">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
-                            </div>
+                            <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
                             <h3 class="font-medium text-gray-800 text-xs line-clamp-2 mt-1" title="${safeName}">${safeName}</h3>
                             <p class="text-[10px] text-gray-400 truncate" title="Uploaded by: ${uploader}">By: ${uploader}</p>
                         </div>
@@ -264,6 +284,71 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 btn.addEventListener('click', () => openMedia(btn.getAttribute('data-url'), btn.getAttribute('data-name')));
             });
         }
+
+        function renderMyPage() {
+            currentViewMode = 'mypage';
+            document.getElementById('view-title').textContent = 'My Publications';
+            document.getElementById('view-subtitle').textContent = currentUserEmail || '';
+            document.getElementById('search-container').classList.add('hidden');
+
+            const myFiles = allFiles.filter(f => f.uploaded_by === currentUserEmail);
+            const listEl = document.getElementById('pdf-list');
+
+            if (myFiles.length === 0) {
+                listEl.innerHTML = `<div class="col-span-full text-center py-12 text-gray-400 text-sm">You haven't uploaded any publications yet.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = myFiles.map(file => {
+                const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(file.name);
+                const badgeText = isImage ? 'Image' : 'PDF';
+                const badgeColor = isImage ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200';
+                const safeName = escapeHtml(file.name);
+
+                return `
+                    <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm hover:border-blue-400 hover:shadow transition flex flex-col justify-between aspect-square group">
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
+                            <h3 class="font-medium text-gray-800 text-xs line-clamp-2 mt-1" title="${safeName}">${safeName}</h3>
+                        </div>
+                        <div class="flex gap-2 w-full">
+                            <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-xl transition font-medium border border-gray-200 group-hover:border-blue-600 flex-1 cursor-pointer">
+                                View
+                            </button>
+                            <button data-id="${file.id}" class="delete-btn bg-red-50 hover:bg-red-100 text-red-600 text-xs px-3 py-2 rounded-xl transition font-medium border border-red-200 cursor-pointer" title="Delete Publication">
+                                &times;
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.querySelectorAll('.read-btn').forEach(btn => {
+                btn.addEventListener('click', () => openMedia(btn.getAttribute('data-url'), btn.getAttribute('data-name')));
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    if (confirm('Are you sure you want to delete this file?')) {
+                        const fileId = btn.getAttribute('data-id');
+                        const { error } = await supabase.from('pdf_files').delete().eq('id', fileId);
+                        if (error) alert('Failed to delete: ' + error.message);
+                        else loadPublicLibrary();
+                    }
+                });
+            });
+        }
+
+        function switchToHome() {
+            currentViewMode = 'home';
+            document.getElementById('view-title').textContent = 'MEDIA CUBE';
+            document.getElementById('view-subtitle').textContent = 'Powered by COSMOS';
+            document.getElementById('search-container').classList.remove('hidden');
+            renderFiles(allFiles.slice(0, 5));
+        }
+
+        document.getElementById('mypage-btn').addEventListener('click', renderMyPage);
 
         // Live Search Handling
         searchInput.addEventListener('input', (e) => {
@@ -281,15 +366,13 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             const file = e.target.files[0];
             if (!file) return;
 
-            // Check if file with the exact same name already exists in the library list
             const fileExists = allFiles.some(f => f.name.toLowerCase() === file.name.toLowerCase());
             if (fileExists) {
                 alert('This file already exists in the library. Duplicate uploads are not allowed.');
-                e.target.value = ''; // Reset file input
+                e.target.value = '';
                 return;
             }
 
-            // Get current logged in user
             const { data: { session } } = await supabase.auth.getSession();
             const userEmail = session ? session.user.email : 'Anonymous';
 
@@ -438,6 +521,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             imgElement.src = '';
             searchInput.value = '';
             pdfDoc = null;
+            switchToHome();
             loadPublicLibrary();
         });
 
