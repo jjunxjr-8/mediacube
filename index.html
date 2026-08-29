@@ -118,8 +118,8 @@
     <script type="module">
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-        const SUPABASE_URL = 'https://vyfyhxirpmptnoipzsvm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
+        const SUPABASE_URL = process.env.SUPABASE_URL;
+        const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let pdfDoc = null, pageNum = 1;
