@@ -242,12 +242,16 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 const badgeText = isImage ? 'Image' : 'PDF';
                 const badgeColor = isImage ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-blue-700 bg-blue-50 border-blue-200';
                 const safeName = escapeHtml(file.name);
+                const uploader = file.uploaded_by ? escapeHtml(file.uploaded_by) : 'Anonymous';
 
                 return `
                     <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm hover:border-blue-400 hover:shadow transition flex flex-col justify-between aspect-square group">
                         <div class="flex flex-col gap-1.5">
-                            <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
+                            <div class="flex items-center justify-between">
+                                <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
+                            </div>
                             <h3 class="font-medium text-gray-800 text-xs line-clamp-2 mt-1" title="${safeName}">${safeName}</h3>
+                            <p class="text-[10px] text-gray-400 truncate" title="Uploaded by: ${uploader}">By: ${uploader}</p>
                         </div>
                         <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-xl transition font-medium border border-gray-200 group-hover:border-blue-600 w-full cursor-pointer">
                             View
@@ -277,26 +281,42 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             const file = e.target.files[0];
             if (!file) return;
 
+            // Check if file with the exact same name already exists in the library list
+            const fileExists = allFiles.some(f => f.name.toLowerCase() === file.name.toLowerCase());
+            if (fileExists) {
+                alert('This file already exists in the library. Duplicate uploads are not allowed.');
+                e.target.value = ''; // Reset file input
+                return;
+            }
+
+            // Get current logged in user
+            const { data: { session } } = await supabase.auth.getSession();
+            const userEmail = session ? session.user.email : 'Anonymous';
+
             const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const filePath = `${Date.now()}_${sanitizedName}`;
 
             const { error: uploadError } = await supabase.storage.from('pdfs').upload(filePath, file);
             if (uploadError) {
                 alert('Upload failed: ' + uploadError.message);
+                e.target.value = '';
                 return;
             }
 
             const { data: publicUrlData } = supabase.storage.from('pdfs').getPublicUrl(filePath);
             const { error: dbError } = await supabase.from('pdf_files').insert([{
                 name: file.name,
-                file_url: publicUrlData.publicUrl
+                file_url: publicUrlData.publicUrl,
+                uploaded_by: userEmail
             }]);
 
             if (dbError) {
                 alert('Database save failed: ' + dbError.message);
+                e.target.value = '';
                 return;
             }
 
+            e.target.value = '';
             loadPublicLibrary();
         });
 
