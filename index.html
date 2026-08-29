@@ -12,34 +12,39 @@
 </head>
 <body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans overflow-hidden">
 
+    <!-- Top Navigation / Header -->
     <header class="w-full px-8 py-6 flex items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-40 shrink-0">
-        <button id="home-btn" class="text-xl font-semibold tracking-wider text-gray-900 hover:text-blue-600 transition text-left flex items-center gap-2">
+        <button id="home-btn" class="text-xl font-semibold tracking-wider text-gray-900 hover:text-blue-600 transition text-left flex items-center gap-2 cursor-pointer">
             MEDIA CUBE
         </button>
         
         <div class="flex items-center gap-4">
+            <!-- Upload Button (Hidden until logged in) -->
             <label id="upload-container" class="hidden cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
                 <span>Upload Media</span>
                 <input type="file" id="file-upload" accept="application/pdf,image/*" class="hidden">
             </label>
 
+            <!-- Auth Status / Login Button -->
             <div id="auth-section">
-                <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition">
+                <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
                     Log In / Sign Up
                 </button>
             </div>
         </div>
 
+        <!-- PDF Pagination Controls inside Header -->
         <div id="navigation-controls" class="hidden items-center gap-3">
             <button id="prev-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50 transition cursor-pointer">Previous</button>
-            <span class="text-sm text-gray-600">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+            <span class="text-sm text-gray-600">Page <span id="current-page">1</span>-<span id="current-page-right">2</span> of <span id="total-pages">1</span></span>
             <button id="next-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50 transition cursor-pointer">Next</button>
         </div>
     </header>
 
+    <!-- Auth Modal -->
     <div id="auth-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-            <button id="close-auth-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
+            <button id="close-auth-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl cursor-pointer">&times;</button>
             <h3 id="auth-title" class="text-xl font-bold mb-6 text-gray-900">Log In to Upload</h3>
             
             <form id="auth-form" class="flex flex-col gap-4">
@@ -51,44 +56,52 @@
                     <label class="block text-xs text-gray-600 mb-1.5 font-medium">Password</label>
                     <input type="password" id="auth-password" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:border-blue-600 outline-none transition">
                 </div>
-                <button type="submit" id="auth-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition text-sm shadow-sm mt-2">
+                <button type="submit" id="auth-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition text-sm shadow-sm mt-2 cursor-pointer">
                     Log In
                 </button>
             </form>
 
             <div class="mt-6 text-center text-xs text-gray-500">
                 <span id="auth-toggle-text">Don't have an account?</span>
-                <button id="auth-toggle-mode" class="text-blue-600 hover:underline ml-1 font-semibold">Sign Up</button>
+                <button id="auth-toggle-mode" class="text-blue-600 hover:underline ml-1 font-semibold cursor-pointer">Sign Up</button>
             </div>
         </div>
     </div>
 
+    <!-- Main Content Area -->
     <main class="flex-1 flex flex-col items-center p-8 overflow-auto relative">
         
+        <!-- Hero Section with Centered Search Bar -->
         <div id="homescreen-view" class="w-full max-w-4xl flex flex-col items-center mt-12 transition-all">
             <h1 class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">MEDIA CUBE</h1>
             <p class="text-sm text-gray-500 mb-8">Powered by COSMOS</p>
             
+            <!-- Search Bar in the center -->
             <div class="w-full relative mb-8">
                 <input type="text" id="search-input" placeholder="Search files..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
             </div>
 
+            <!-- 5 Files Displayed Side-by-Side as Small Squares -->
             <div id="files-section" class="w-full flex flex-col gap-3 transition-all duration-300">
                 <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full"></div>
             </div>
         </div>
 
+        <!-- Reader / Viewer View (Fits entirely within screen viewport with double pages & high res crispness) -->
         <div id="reader-view" class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 bg-white z-30 p-4">
             
-            <button id="floating-prev" class="hidden fixed left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur">
+            <!-- Floating Navigation Arrows for Screen Edges -->
+            <button id="floating-prev" class="hidden fixed left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur cursor-pointer">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
-            <button id="floating-next" class="hidden fixed right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur">
+            <button id="floating-next" class="hidden fixed right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur cursor-pointer">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
 
-            <div id="pdf-container" class="hidden shadow-xl bg-white rounded-xl overflow-hidden border border-gray-200 max-h-[calc(100vh-140px)] flex items-center justify-center">
-                <canvas id="pdf-canvas" class="max-h-[calc(100vh-140px)] w-auto object-contain"></canvas>
+            <!-- Dynamic Fit Container for Side-by-Side Canvases -->
+            <div id="pdf-container" class="hidden shadow-xl bg-white rounded-xl overflow-hidden border border-gray-200 max-h-[calc(100vh-140px)] flex items-center justify-center gap-2 p-2">
+                <canvas id="pdf-canvas-left" class="max-h-[calc(100vh-160px)] w-auto object-contain"></canvas>
+                <canvas id="pdf-canvas-right" class="max-h-[calc(100vh-160px)] w-auto object-contain hidden"></canvas>
             </div>
             <img id="media-img" class="hidden max-h-[calc(100vh-140px)] max-w-full shadow-xl rounded-xl object-contain bg-gray-50" alt="Media Preview">
         </div>
@@ -101,12 +114,15 @@
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null;
-        let currentPdfUrl = null;
+        let pdfDoc = null, pageNum = 1;
         let isSignUpMode = false;
         let allFiles = []; 
-        const canvas = document.getElementById('pdf-canvas');
-        const ctx = canvas.getContext('2d');
+        
+        const canvasLeft = document.getElementById('pdf-canvas-left');
+        const ctxLeft = canvasLeft.getContext('2d');
+        const canvasRight = document.getElementById('pdf-canvas-right');
+        const ctxRight = canvasRight.getContext('2d');
+        
         const imgElement = document.getElementById('media-img');
         const searchInput = document.getElementById('search-input');
         const filesSection = document.getElementById('files-section');
@@ -148,7 +164,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 authSection.innerHTML = `
                     <div class="flex items-center gap-3">
                         <span class="text-xs text-gray-600 hidden sm:inline font-medium">${escapeHtml(session.user.email)}</span>
-                        <button id="logout-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl text-xs font-medium transition">Log Out</button>
+                        <button id="logout-btn" class="bg-red-50 text-red-600 hover:bg-red-100 px-3 py-2 rounded-xl text-xs font-medium transition cursor-pointer">Log Out</button>
                     </div>
                 `;
                 uploadContainer.classList.remove('hidden');
@@ -157,7 +173,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 });
             } else {
                 authSection.innerHTML = `
-                    <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition">
+                    <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
                         Log In / Sign Up
                     </button>
                 `;
@@ -282,7 +298,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         });
 
         async function openMedia(url, name) {
-            currentPdfUrl = url;
             document.getElementById('homescreen-view').classList.add('hidden');
             document.getElementById('reader-view').classList.remove('hidden');
             document.getElementById('reader-view').classList.add('flex');
@@ -290,7 +305,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(name);
 
             if (isImage) {
-                canvas.parentElement.classList.add('hidden');
+                canvasLeft.parentElement.classList.add('hidden');
                 document.getElementById('floating-prev').classList.add('hidden');
                 document.getElementById('floating-next').classList.add('hidden');
                 imgElement.src = url;
@@ -298,7 +313,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 document.getElementById('navigation-controls').classList.add('hidden');
             } else {
                 imgElement.classList.add('hidden');
-                canvas.parentElement.classList.remove('hidden');
+                canvasLeft.parentElement.classList.remove('hidden');
                 document.getElementById('navigation-controls').classList.remove('hidden');
                 document.getElementById('navigation-controls').classList.add('flex');
                 document.getElementById('floating-prev').classList.remove('hidden');
@@ -310,64 +325,88 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                     pdfDoc = pdfDoc_;
                     document.getElementById('total-pages').textContent = pdfDoc.numPages;
                     pageNum = 1;
-                    renderPage(pageNum);
+                    renderSpread(pageNum);
                 }).catch(err => alert('Error loading PDF: ' + err.message));
             }
         }
 
-        function renderPage(num) {
-            if (!pdfDoc) return;
-            pageRendering = true;
-            pdfDoc.getPage(num).then(function(page) {
-                // Automatically calculate scale to fit the entire screen height cleanly
-                const containerHeight = window.innerHeight - 180;
-                const unscaledViewport = page.getViewport({ scale: 1 });
-                const scale = containerHeight / unscaledViewport.height;
+        async function renderPageToCanvas(pageNumber, canvas, ctx) {
+            const page = await pdfDoc.getPage(pageNumber);
+            const containerHeight = window.innerHeight - 200;
+            
+            // Base viewport to inspect dimensions
+            const unscaledViewport = page.getViewport({ scale: 1 });
+            const baseScale = containerHeight / unscaledViewport.height;
 
-                const viewport = page.getViewport({ scale: scale });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                
-                page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
-                    pageRendering = false;
-                    if (pageNumPending !== null) { 
-                        renderPage(pageNumPending); 
-                        pageNumPending = null; 
-                    }
-                });
-            });
-            document.getElementById('current-page').textContent = num;
+            // Fix pixelation/resolution issues on high-DPI (Retina) screens using devicePixelRatio
+            const outputScale = window.devicePixelRatio || 1;
+            const scale = baseScale * outputScale;
+            const viewport = page.getViewport({ scale: scale });
+
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            canvas.style.width = (viewport.width / outputScale) + 'px';
+            canvas.style.height = (viewport.height / outputScale) + 'px';
+
+            const renderContext = {
+                canvasContext: ctx,
+                viewport: viewport
+            };
+
+            await page.render(renderContext).promise;
         }
 
-        function goToPrevPage() {
-            if (pageNum > 1) {
-                pageNum--;
-                renderPage(pageNum);
+        async function renderSpread(num) {
+            if (!pdfDoc) return;
+
+            // Render left page
+            await renderPageToCanvas(num, canvasLeft, ctxLeft);
+            document.getElementById('current-page').textContent = num;
+
+            // Render right page if it exists within total pages bounds
+            if (num + 1 <= pdfDoc.numPages) {
+                canvasRight.classList.remove('hidden');
+                await renderPageToCanvas(num + 1, canvasRight, ctxRight);
+                document.getElementById('current-page-right').textContent = num + 1;
+                document.getElementById('current-page-right').parentElement.style.display = 'inline';
+            } else {
+                canvasRight.classList.add('hidden');
+                document.getElementById('current-page-right').parentElement.style.display = 'none';
             }
         }
 
-        function goToNextPage() {
-            if (pdfDoc && pageNum < pdfDoc.numPages) {
-                pageNum++;
-                renderPage(pageNum);
+        function goToPrevSpread() {
+            if (pageNum > 2) {
+                pageNum -= 2;
+                renderSpread(pageNum);
+            } else if (pageNum === 2) {
+                pageNum = 1;
+                renderSpread(pageNum);
+            }
+        }
+
+        function goToNextSpread() {
+            if (pdfDoc && pageNum + 2 <= pdfDoc.numPages) {
+                pageNum += 2;
+                renderSpread(pageNum);
             }
         }
 
         // Button control bindings
-        document.getElementById('prev-page').addEventListener('click', goToPrevPage);
-        document.getElementById('next-page').addEventListener('click', goToNextPage);
-        document.getElementById('floating-prev').addEventListener('click', goToPrevPage);
-        document.getElementById('floating-next').addEventListener('click', goToNextPage);
+        document.getElementById('prev-page').addEventListener('click', goToPrevSpread);
+        document.getElementById('next-page').addEventListener('click', goToNextSpread);
+        document.getElementById('floating-prev').addEventListener('click', goToPrevSpread);
+        document.getElementById('floating-next').addEventListener('click', goToNextSpread);
 
         // Arrow keys keyboard shortcut support
         window.addEventListener('keydown', (e) => {
             if (!document.getElementById('reader-view').classList.contains('hidden') && pdfDoc) {
                 if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
                     e.preventDefault();
-                    goToPrevPage();
+                    goToPrevSpread();
                 } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                     e.preventDefault();
-                    goToNextPage();
+                    goToNextSpread();
                 }
             }
         });
