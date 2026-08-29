@@ -12,27 +12,23 @@
 </head>
 <body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans overflow-hidden">
 
-    <!-- Top Navigation / Header -->
     <header class="w-full px-8 py-6 flex items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-40 shrink-0">
         <button id="home-btn" class="text-xl font-semibold tracking-wider text-gray-900 hover:text-blue-600 transition text-left flex items-center gap-2 cursor-pointer">
             MEDIA CUBE
         </button>
         
         <div class="flex items-center gap-4">
-            <!-- My Page Button (Hidden until logged in) -->
             <button id="mypage-btn" class="hidden bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
                 My Page
             </button>
 
-            <!-- Upload Button (Hidden until logged in) -->
             <label id="upload-container" class="hidden cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
                 <button id="open-upload-modal" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm cursor-pointer">
-    Upload Media
-</button>
+                    Upload Media
+                </button>
                 <input type="file" id="file-upload" accept="application/pdf,image/*" class="hidden">
             </label>
 
-            <!-- Auth Status / Login Button -->
             <div id="auth-section">
                 <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer">
                     Log In / Sign Up
@@ -40,7 +36,6 @@
             </div>
         </div>
 
-        <!-- PDF Pagination Controls inside Header -->
         <div id="navigation-controls" class="hidden items-center gap-3">
             <button id="prev-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50 transition cursor-pointer">Previous</button>
             <span class="text-sm text-gray-600">Page <span id="current-page">1</span>-<span id="current-page-right">2</span> of <span id="total-pages">1</span></span>
@@ -48,7 +43,6 @@
         </div>
     </header>
 
-    <!-- Auth Modal -->
     <div id="auth-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
             <button id="close-auth-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl cursor-pointer">&times;</button>
@@ -76,52 +70,55 @@
     </div>
 
     <div id="upload-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-    <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
-        <button id="close-upload-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl cursor-pointer">&times;</button>
-        <h3 class="text-xl font-bold mb-6 text-gray-900">Upload Media</h3>
-        
-        <form id="upload-form" class="flex flex-col gap-4">
-            <div>
-                <label class="block text-xs text-gray-600 mb-1.5 font-medium">Select File (PDF or Image)</label>
-                <input type="file" id="modal-file-input" accept="application/pdf,image/*" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 outline-none transition cursor-pointer">
-            </div>
+        <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+            <button id="close-upload-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl cursor-pointer">&times;</button>
+            <h3 class="text-xl font-bold mb-6 text-gray-900">Upload Media</h3>
+            
+            <form id="upload-form" class="flex flex-col gap-4">
+                <div>
+                    <label class="block text-xs text-gray-600 mb-1.5 font-medium">Select File (PDF or Image)</label>
+                    <input type="file" id="modal-file-input" accept="application/pdf,image/*" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 outline-none transition cursor-pointer">
+                </div>
 
-            <div>
-                <label class="block text-xs text-gray-600 mb-1.5 font-medium">Connect to Society</label>
-                <select id="society-select" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:border-blue-600 outline-none transition cursor-pointer">
-                    <option value="">-- None (No Society Tag) --</option>
-                    </select>
-            </div>
+                <div class="relative">
+                    <label class="block text-xs text-gray-600 mb-1.5 font-medium">Connect to Society</label>
+                    
+                    <button type="button" id="dropdown-trigger" class="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm text-gray-700 flex items-center justify-between focus:border-blue-600 outline-none transition cursor-pointer">
+                        <span id="dropdown-selected-text">-- None (No Society Tag) --</span>
+                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" id="dropdown-arrow" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
 
-            <div id="selected-tag-container" class="hidden flex items-center gap-2">
-                <span class="text-xs text-gray-500">Selected Tag:</span>
-                <span id="society-tag-badge" class="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
-                    <span id="tag-text"></span>
-                    <button type="button" id="remove-tag-btn" class="hover:text-red-600 font-bold ml-1 cursor-pointer">&times;</button>
-                </span>
-            </div>
+                    <div id="dropdown-menu" class="hidden absolute top-full left-0 w-full mt-1.5 bg-white border border-gray-200 rounded-xl shadow-xl max-h-48 overflow-y-auto z-50 p-1 flex flex-col gap-0.5">
+                        <div data-value="" class="society-option px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer transition">-- None (No Society Tag) --</div>
+                    </div>
+                </div>
 
-            <div class="flex items-center gap-2 pt-2">
-                <input type="checkbox" id="terms-checkbox" required class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
-                <label for="terms-checkbox" class="text-xs text-gray-600 select-none">I agree to the terms and publication guidelines</label>
-            </div>
+                <div id="selected-tag-container" class="hidden flex items-center gap-2 mt-1">
+                    <span class="text-xs text-gray-500">Selected Tag:</span>
+                    <span id="society-tag-badge" class="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
+                        <span id="tag-text"></span>
+                        <button type="button" id="remove-tag-btn" class="hover:text-red-600 font-bold ml-1 cursor-pointer">&times;</button>
+                    </span>
+                </div>
 
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition text-sm shadow-sm mt-2 cursor-pointer">
-                Upload Publication
-            </button>
-        </form>
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="terms-checkbox" required class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                    <label for="terms-checkbox" class="text-xs text-gray-600 select-none">I agree to the terms and publication guidelines</label>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition text-sm shadow-sm mt-2 cursor-pointer">
+                    Upload Publication
+                </button>
+            </form>
+        </div>
     </div>
-</div>
 
-    <!-- Main Content Area -->
     <main class="flex-1 flex flex-col items-center p-8 overflow-auto relative">
         
-        <!-- Hero Section with Centered Search Bar -->
         <div id="homescreen-view" class="w-full max-w-4xl flex flex-col items-center mt-12 transition-all">
             <h1 id="view-title" class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">MEDIA CUBE</h1>
             <p id="view-subtitle" class="text-sm text-gray-500 mb-8">Powered by COSMOS</p>
             
-            <!-- Search Bar and Subtext Container -->
             <div id="search-container" class="w-full flex flex-col items-center mb-8 px-4">
                 <div class="w-full relative">
                     <input type="text" id="search-input" placeholder="Search files..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
@@ -129,16 +126,13 @@
                 <p class="text-[11px] font-light uppercase tracking-widest text-gray-400 mt-3 pt-1 text-center w-full">BECAUSE PUBLICATION SHOULDN'T BE A MONOPOLY</p>
             </div>
 
-            <!-- Files Displayed Container -->
             <div id="files-section" class="w-full flex flex-col gap-3 transition-all duration-300">
                 <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full"></div>
             </div>
         </div>
 
-        <!-- Reader / Viewer View -->
         <div id="reader-view" class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 bg-white z-30 p-4">
             
-            <!-- Floating Navigation Arrows for Screen Edges -->
             <button id="floating-prev" class="hidden fixed left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur cursor-pointer">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </button>
@@ -146,7 +140,6 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
             </button>
 
-            <!-- Dynamic Fit Container for Side-by-Side Canvases -->
             <div id="pdf-container" class="hidden shadow-xl bg-white rounded-xl overflow-hidden border border-gray-200 max-h-[calc(100vh-140px)] flex items-center justify-center gap-2 p-2">
                 <canvas id="pdf-canvas-left" class="max-h-[calc(100vh-160px)] w-auto object-contain"></canvas>
                 <canvas id="pdf-canvas-right" class="max-h-[calc(100vh-160px)] w-auto object-contain hidden"></canvas>
@@ -159,20 +152,24 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
         const SUPABASE_URL = 'https://vyfyhxirpmptnoipzsvm.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let selectedSociety = "";
 
-        // Elements for Upload Modal
+        // Elements for Upload Modal & Custom Dropdown
         const uploadModal = document.getElementById('upload-modal');
         const openUploadModalBtn = document.getElementById('open-upload-modal');
         const closeUploadModalBtn = document.getElementById('close-upload-modal');
-        const societySelect = document.getElementById('society-select');
+        const uploadForm = document.getElementById('upload-form');
+        
+        const dropdownTrigger = document.getElementById('dropdown-trigger');
+        const dropdownMenu = document.getElementById('dropdown-menu');
+        const dropdownArrow = document.getElementById('dropdown-arrow');
+        const dropdownSelectedText = document.getElementById('dropdown-selected-text');
         const tagContainer = document.getElementById('selected-tag-container');
         const tagText = document.getElementById('tag-text');
         const removeTagBtn = document.getElementById('remove-tag-btn');
-        const uploadForm = document.getElementById('upload-form');
 
         // Open Upload Modal & Fetch Societies
         openUploadModalBtn.addEventListener('click', async () => {
@@ -184,10 +181,25 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             uploadModal.classList.add('hidden');
             uploadForm.reset();
             selectedSociety = "";
+            dropdownSelectedText.textContent = "-- None (No Society Tag) --";
             tagContainer.classList.add('hidden');
+            dropdownMenu.classList.add('hidden');
         });
 
-        // Fetch societies from Supabase 'society-names' table
+        // Toggle custom dropdown menu open/close
+        dropdownTrigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('hidden');
+            dropdownArrow.classList.toggle('rotate-180');
+        });
+
+        // Close dropdown when clicking outside
+        window.addEventListener('click', () => {
+            dropdownMenu.classList.add('hidden');
+            dropdownArrow.classList.remove('rotate-180');
+        });
+
+        // Fetch societies from Supabase 'society-names' table and populate custom list
         async function fetchSocietiesForDropdown() {
             const { data, error } = await supabase.from('society-names').select('society-name').order('society-name', { ascending: true });
             
@@ -196,32 +208,41 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 return;
             }
 
-            societySelect.innerHTML = `<option value="">-- None (No Society Tag) --</option>`;
+            dropdownMenu.innerHTML = `<div data-value="" class="society-option px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg cursor-pointer transition">-- None (No Society Tag) --</div>`;
+            
             if (data) {
                 data.forEach(item => {
-                    const option = document.createElement('option');
-                    option.value = item['society-name'];
-                    option.textContent = item['society-name'];
-                    societySelect.appendChild(option);
+                    const name = item['society-name'];
+                    const optionDiv = document.createElement('div');
+                    optionDiv.setAttribute('data-value', name);
+                    optionDiv.className = 'society-option px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg cursor-pointer transition';
+                    optionDiv.textContent = name;
+                    dropdownMenu.appendChild(optionDiv);
                 });
             }
-        }
 
-        // Handle Dropdown Selection & Tag Display
-        societySelect.addEventListener('change', (e) => {
-            selectedSociety = e.target.value;
-            if (selectedSociety) {
-                tagText.textContent = selectedSociety;
-                tagContainer.classList.remove('hidden');
-            } else {
-                tagContainer.classList.add('hidden');
-            }
-        });
+            // Attach click event listeners to custom options
+            document.querySelectorAll('.society-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    selectedSociety = e.target.getAttribute('data-value');
+                    dropdownSelectedText.textContent = selectedSociety || "-- None (No Society Tag) --";
+                    
+                    if (selectedSociety) {
+                        tagText.textContent = selectedSociety;
+                        tagContainer.classList.remove('hidden');
+                    } else {
+                        tagContainer.classList.add('hidden');
+                    }
+                    dropdownMenu.classList.add('hidden');
+                    dropdownArrow.classList.remove('rotate-180');
+                });
+            });
+        }
 
         // Remove tag manually via 'X' button
         removeTagBtn.addEventListener('click', () => {
             selectedSociety = "";
-            societySelect.value = "";
+            dropdownSelectedText.textContent = "-- None (No Society Tag) --";
             tagContainer.classList.add('hidden');
         });
 
@@ -254,12 +275,11 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
             const { data: publicUrlData } = supabase.storage.from('pdfs').getPublicUrl(filePath);
             
-            // Insert file along with the connected society tag (if chosen)
             const { error: dbError } = await supabase.from('pdf_files').insert([{
                 name: file.name,
                 file_url: publicUrlData.publicUrl,
                 uploaded_by: userEmail,
-                society_tag: selectedSociety || null // Saves society tag if selected
+                society_tag: selectedSociety || null 
             }]);
 
             if (dbError) {
@@ -270,6 +290,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             uploadModal.classList.add('hidden');
             uploadForm.reset();
             selectedSociety = "";
+            dropdownSelectedText.textContent = "-- None (No Society Tag) --";
             tagContainer.classList.add('hidden');
             loadPublicLibrary();
         });
@@ -277,7 +298,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         let pdfDoc = null, pageNum = 1;
         let isSignUpMode = false;
         let allFiles = []; 
-        let currentViewMode = 'home'; // 'home' or 'mypage'
+        let currentViewMode = 'home'; 
         let currentUserEmail = null;
         
         const canvasLeft = document.getElementById('pdf-canvas-left');
@@ -289,12 +310,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         const searchInput = document.getElementById('search-input');
         const filesSection = document.getElementById('files-section');
 
-        // Hide files when clicking/focusing on the search bar
         searchInput.addEventListener('focus', () => {
             filesSection.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
         });
 
-        // Show files back when clicking away from search if empty
         searchInput.addEventListener('blur', () => {
             if (searchInput.value.trim() === '') {
                 filesSection.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
@@ -394,7 +413,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             }
             allFiles = data || [];
             
-            // Check if URL contains a file ID query parameter (e.g., ?file=XYZ)
             const urlParams = new URLSearchParams(window.location.search);
             const fileId = urlParams.get('file');
             
@@ -510,7 +528,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
             renderMyPage();
         });
 
-        // Live Search Handling
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             if (query.trim() === '') {
@@ -592,102 +609,83 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 document.getElementById('floating-next').classList.remove('hidden');
                 document.getElementById('floating-next').classList.add('flex');
 
-                pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
-                    pdfDoc = pdfDoc_;
-                    document.getElementById('total-pages').textContent = pdfDoc.numPages;
-                    pageNum = 1;
-                    renderSpread(pageNum);
-                }).catch(err => alert('Error loading PDF: ' + err.message));
+                const loadingTask = pdfjsLib.getDocument(url);
+                pdfDoc = await loadingTask.promise;
+                document.getElementById('total-pages').textContent = pdfDoc.numPages;
+                pageNum = 1;
+                renderPDFPagePair(pageNum);
             }
         }
 
-        async function renderPageToCanvas(pageNumber, canvas, ctx) {
-            const page = await pdfDoc.getPage(pageNumber);
-            const containerHeight = window.innerHeight - 200;
-            
-            const unscaledViewport = page.getViewport({ scale: 1 });
-            const baseScale = containerHeight / unscaledViewport.height;
-
-            const outputScale = window.devicePixelRatio || 1;
-            const scale = baseScale * outputScale;
-            const viewport = page.getViewport({ scale: scale });
-
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            canvas.style.width = (viewport.width / outputScale) + 'px';
-            canvas.style.height = (viewport.height / outputScale) + 'px';
-
-            const renderContext = {
-                canvasContext: ctx,
-                viewport: viewport
-            };
-
-            await page.render(renderContext).promise;
-        }
-
-        async function renderSpread(num) {
-            if (!pdfDoc) return;
-
-            await renderPageToCanvas(num, canvasLeft, ctxLeft);
+        async function renderPDFPagePair(num) {
             document.getElementById('current-page').textContent = num;
+            const rightNum = num + 1 <= pdfDoc.numPages ? num + 1 : null;
+            document.getElementById('current-page-right').textContent = rightNum || num;
 
-            if (num + 1 <= pdfDoc.numPages) {
+            if (rightNum) {
                 canvasRight.classList.remove('hidden');
-                await renderPageToCanvas(num + 1, canvasRight, ctxRight);
-                document.getElementById('current-page-right').textContent = num + 1;
                 document.getElementById('current-page-right').parentElement.style.display = 'inline';
             } else {
                 canvasRight.classList.add('hidden');
-                document.getElementById('current-page-right').parentElement.style.display = 'none';
+            }
+
+            const page1 = await pdfDoc.getPage(num);
+            const viewport1 = page1.getViewport({ scale: 1.5 });
+            canvasLeft.height = viewport1.height;
+            canvasLeft.width = viewport1.width;
+            await page1.render({ canvasContext: ctxLeft, viewport: viewport1 }).promise;
+
+            if (rightNum) {
+                const page2 = await pdfDoc.getPage(rightNum);
+                const viewport2 = page2.getViewport({ scale: 1.5 });
+                canvasRight.height = viewport2.height;
+                canvasRight.width = viewport2.width;
+                await page2.render({ canvasContext: ctxRight, viewport: viewport2 }).promise;
+            }
+
+            document.getElementById('prev-page').disabled = (num <= 1);
+            document.getElementById('floating-prev').disabled = (num <= 1);
+            document.getElementById('next-page').disabled = (num + 2 > pdfDoc.numPages);
+            document.getElementById('floating-next').disabled = (num + 2 > pdfDoc.numPages);
+        }
+
+        function changePage(offset) {
+            if (!pdfDoc) return;
+            const newPage = pageNum + offset;
+            if (newPage >= 1 && newPage <= pdfDoc.numPages) {
+                pageNum = newPage;
+                renderPDFPagePair(pageNum);
             }
         }
 
-        function goToPrevSpread() {
-            if (pageNum > 2) {
-                pageNum -= 2;
-                renderSpread(pageNum);
-            } else if (pageNum === 2) {
-                pageNum = 1;
-                renderSpread(pageNum);
-            }
-        }
+        document.getElementById('prev-page').addEventListener('click', () => changePage(-2));
+        document.getElementById('next-page').addEventListener('click', () => changePage(2));
+        document.getElementById('floating-prev').addEventListener('click', () => changePage(-2));
+        document.getElementById('floating-next').addEventListener('click', () => changePage(2));
 
-        function goToNextSpread() {
-            if (pdfDoc && pageNum + 2 <= pdfDoc.numPages) {
-                pageNum += 2;
-                renderSpread(pageNum);
-            }
-        }
-
-        document.getElementById('prev-page').addEventListener('click', goToPrevSpread);
-        document.getElementById('next-page').addEventListener('click', goToNextSpread);
-        document.getElementById('floating-prev').addEventListener('click', goToPrevSpread);
-        document.getElementById('floating-next').addEventListener('click', goToNextSpread);
-
-        window.addEventListener('keydown', (e) => {
-            if (!document.getElementById('reader-view').classList.contains('hidden') && pdfDoc) {
-                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    goToPrevSpread();
-                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-                    e.preventDefault();
-                    goToNextSpread();
-                }
-            }
-        });
-        
         document.getElementById('home-btn').addEventListener('click', () => {
+            window.history.replaceState({}, document.title, window.location.pathname);
             document.getElementById('reader-view').classList.add('hidden');
+            document.getElementById('reader-view').classList.remove('flex');
+            document.getElementById('homescreen-view').classList.remove('hidden');
             document.getElementById('navigation-controls').classList.add('hidden');
             document.getElementById('floating-prev').classList.add('hidden');
             document.getElementById('floating-next').classList.add('hidden');
-            document.getElementById('homescreen-view').classList.remove('hidden');
-            filesSection.classList.remove('opacity-0', 'pointer-events-none');
-            imgElement.src = '';
-            searchInput.value = '';
-            pdfDoc = null;
-            window.history.replaceState({}, document.title, window.location.pathname);
-            switchToHome();
+            refreshCurrentView();
+        });
+
+        window.addEventListener('popstate', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fileId = urlParams.get('file');
+            if (!fileId) {
+                document.getElementById('reader-view').classList.add('hidden');
+                document.getElementById('reader-view').classList.remove('flex');
+                document.getElementById('homescreen-view').classList.remove('hidden');
+                document.getElementById('navigation-controls').classList.add('hidden');
+                document.getElementById('floating-prev').classList.add('hidden');
+                document.getElementById('floating-next').classList.add('hidden');
+                refreshCurrentView();
+            }
         });
 
         checkUserSession();
