@@ -26,7 +26,9 @@
 
             <!-- Upload Button (Hidden until logged in) -->
             <label id="upload-container" class="hidden cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
-                <span>Upload Media</span>
+                <button id="open-upload-modal" class="hidden bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm cursor-pointer">
+    Upload Media
+</button>
                 <input type="file" id="file-upload" accept="application/pdf,image/*" class="hidden">
             </label>
 
@@ -72,6 +74,44 @@
             </div>
         </div>
     </div>
+
+    <div id="upload-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
+        <button id="close-upload-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl cursor-pointer">&times;</button>
+        <h3 class="text-xl font-bold mb-6 text-gray-900">Upload Media</h3>
+        
+        <form id="upload-form" class="flex flex-col gap-4">
+            <div>
+                <label class="block text-xs text-gray-600 mb-1.5 font-medium">Select File (PDF or Image)</label>
+                <input type="file" id="modal-file-input" accept="application/pdf,image/*" required class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 outline-none transition cursor-pointer">
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-600 mb-1.5 font-medium">Connect to Society</label>
+                <select id="society-select" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-gray-900 focus:border-blue-600 outline-none transition cursor-pointer">
+                    <option value="">-- None (No Society Tag) --</option>
+                    </select>
+            </div>
+
+            <div id="selected-tag-container" class="hidden flex items-center gap-2">
+                <span class="text-xs text-gray-500">Selected Tag:</span>
+                <span id="society-tag-badge" class="bg-blue-50 text-blue-700 border border-blue-200 text-xs px-2.5 py-1 rounded-full font-medium flex items-center gap-1">
+                    <span id="tag-text"></span>
+                    <button type="button" id="remove-tag-btn" class="hover:text-red-600 font-bold ml-1 cursor-pointer">&times;</button>
+                </span>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="terms-checkbox" required class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer">
+                <label for="terms-checkbox" class="text-xs text-gray-600 select-none">I agree to the terms and publication guidelines</label>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-medium transition text-sm shadow-sm mt-2 cursor-pointer">
+                Upload Publication
+            </button>
+        </form>
+    </div>
+</div>
 
     <!-- Main Content Area -->
     <main class="flex-1 flex flex-col items-center p-8 overflow-auto relative">
@@ -121,6 +161,118 @@
         const SUPABASE_URL = 'https://vyfyhxirpmptnoipzsvm.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let selectedSociety = "";
+
+        // Elements for Upload Modal
+        const uploadModal = document.getElementById('upload-modal');
+        const openUploadModalBtn = document.getElementById('open-upload-modal');
+        const closeUploadModalBtn = document.getElementById('close-upload-modal');
+        const societySelect = document.getElementById('society-select');
+        const tagContainer = document.getElementById('selected-tag-container');
+        const tagText = document.getElementById('tag-text');
+        const removeTagBtn = document.getElementById('remove-tag-btn');
+        const uploadForm = document.getElementById('upload-form');
+
+        // Open Upload Modal & Fetch Societies
+        openUploadModalBtn.addEventListener('click', async () => {
+            uploadModal.classList.remove('hidden');
+            await fetchSocietiesForDropdown();
+        });
+
+        closeUploadModalBtn.addEventListener('click', () => {
+            uploadModal.classList.add('hidden');
+            uploadForm.reset();
+            selectedSociety = "";
+            tagContainer.classList.add('hidden');
+        });
+
+        // Fetch societies from Supabase 'society-names' table
+        async function fetchSocietiesForDropdown() {
+            const { data, error } = await supabase.from('society-names').select('society-name').order('society-name', { ascending: true });
+            
+            if (error) {
+                console.error('Error fetching societies:', error.message);
+                return;
+            }
+
+            societySelect.innerHTML = `<option value="">-- None (No Society Tag) --</option>`;
+            if (data) {
+                data.forEach(item => {
+                    const option = document.createElement('option');
+                    option.value = item['society-name'];
+                    option.textContent = item['society-name'];
+                    societySelect.appendChild(option);
+                });
+            }
+        }
+
+        // Handle Dropdown Selection & Tag Display
+        societySelect.addEventListener('change', (e) => {
+            selectedSociety = e.target.value;
+            if (selectedSociety) {
+                tagText.textContent = selectedSociety;
+                tagContainer.classList.remove('hidden');
+            } else {
+                tagContainer.classList.add('hidden');
+            }
+        });
+
+        // Remove tag manually via 'X' button
+        removeTagBtn.addEventListener('click', () => {
+            selectedSociety = "";
+            societySelect.value = "";
+            tagContainer.classList.add('hidden');
+        });
+
+        // Handle Form Submission & Upload
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('modal-file-input');
+            const file = fileInput.files[0];
+            const termsChecked = document.getElementById('terms-checkbox').checked;
+
+            if (!file || !termsChecked) return;
+
+            const fileExists = allFiles.some(f => f.name.toLowerCase() === file.name.toLowerCase());
+            if (fileExists) {
+                alert('This file already exists in the library. Duplicate uploads are not allowed.');
+                return;
+            }
+
+            const { data: { session } } = await supabase.auth.getSession();
+            const userEmail = session ? session.user.email : 'Anonymous';
+
+            const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const filePath = `${Date.now()}_${sanitizedName}`;
+
+            const { error: uploadError } = await supabase.storage.from('pdfs').upload(filePath, file);
+            if (uploadError) {
+                alert('Upload failed: ' + uploadError.message);
+                return;
+            }
+
+            const { data: publicUrlData } = supabase.storage.from('pdfs').getPublicUrl(filePath);
+            
+            // Insert file along with the connected society tag (if chosen)
+            const { error: dbError } = await supabase.from('pdf_files').insert([{
+                name: file.name,
+                file_url: publicUrlData.publicUrl,
+                uploaded_by: userEmail,
+                society_tag: selectedSociety || null // Saves society tag if selected
+            }]);
+
+            if (dbError) {
+                alert('Database save failed: ' + dbError.message);
+                return;
+            }
+
+            uploadModal.classList.add('hidden');
+            uploadForm.reset();
+            selectedSociety = "";
+            tagContainer.classList.add('hidden');
+            loadPublicLibrary();
+        });
 
         let pdfDoc = null, pageNum = 1;
         let isSignUpMode = false;
