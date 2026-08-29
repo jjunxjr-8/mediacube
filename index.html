@@ -171,6 +171,12 @@
         const tagText = document.getElementById('tag-text');
         const removeTagBtn = document.getElementById('remove-tag-btn');
 
+        // Helper function to validate NLCS email domains
+        function isValidNlcsEmail(email) {
+            const lowerEmail = email.toLowerCase().trim();
+            return lowerEmail.endsWith('@nlcsjeju.kr') || lowerEmail.endsWith('@pupils.nlcsjeju.kr');
+        }
+
         // Open Upload Modal & Fetch Societies
         openUploadModalBtn.addEventListener('click', async () => {
             uploadModal.classList.remove('hidden');
@@ -255,15 +261,19 @@
 
             if (!file || !termsChecked) return;
 
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !isValidNlcsEmail(session.user.email)) {
+                alert('Access denied: You must be logged in with an @nlcsjeju.kr or @pupils.nlcsjeju.kr account to upload.');
+                return;
+            }
+
             const fileExists = allFiles.some(f => f.name.toLowerCase() === file.name.toLowerCase());
             if (fileExists) {
                 alert('This file already exists in the library. Duplicate uploads are not allowed.');
                 return;
             }
 
-            const { data: { session } } = await supabase.auth.getSession();
-            const userEmail = session ? session.user.email : 'Anonymous';
-
+            const userEmail = session.user.email;
             const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const filePath = `${Date.now()}_${sanitizedName}`;
 
@@ -330,11 +340,23 @@
 
         async function checkUserSession() {
             const { data: { session } } = await supabase.auth.getSession();
+            if (session && !isValidNlcsEmail(session.user.email)) {
+                // Force logout if an unauthorized email is detected
+                await supabase.auth.signOut();
+                currentUserEmail = null;
+                updateAuthUI(null);
+                return;
+            }
             currentUserEmail = session ? session.user.email : null;
             updateAuthUI(session);
         }
 
         supabase.auth.onAuthStateChange((event, session) => {
+            if (session && !isValidNlcsEmail(session.user.email)) {
+                supabase.auth.signOut();
+                alert('Access restricted to @nlcsjeju.kr and @pupils.nlcsjeju.kr accounts only.');
+                return;
+            }
             currentUserEmail = session ? session.user.email : null;
             updateAuthUI(session);
         });
@@ -388,6 +410,12 @@
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
             const password = document.getElementById('auth-password').value;
+
+            // Check email domain validity before sending request
+            if (!isValidNlcsEmail(email)) {
+                alert('Only @nlcsjeju.kr or @pupils.nlcsjeju.kr email accounts are allowed.');
+                return;
+            }
 
             if (isSignUpMode) {
                 const { error } = await supabase.auth.signUp({ email, password });
@@ -543,6 +571,13 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session || !isValidNlcsEmail(session.user.email)) {
+                alert('Access denied: You must be logged in with an @nlcsjeju.kr or @pupils.nlcsjeju.kr account to upload.');
+                e.target.value = '';
+                return;
+            }
+
             const fileExists = allFiles.some(f => f.name.toLowerCase() === file.name.toLowerCase());
             if (fileExists) {
                 alert('This file already exists in the library. Duplicate uploads are not allowed.');
@@ -550,9 +585,7 @@
                 return;
             }
 
-            const { data: { session } } = await supabase.auth.getSession();
-            const userEmail = session ? session.user.email : 'Anonymous';
-
+            const userEmail = session.user.email;
             const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
             const filePath = `${Date.now()}_${sanitizedName}`;
 
