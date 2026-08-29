@@ -72,26 +72,19 @@
     <main class="flex-1 flex flex-col items-center p-8 overflow-auto">
         
         <!-- Hero Section with Centered Search Bar -->
-        <div id="homescreen-view" class="w-full max-w-7xl flex flex-col items-center my-auto min-h-[70vh] justify-center transition-all">
+        <div id="homescreen-view" class="w-full max-w-4xl flex flex-col items-center mt-12 transition-all">
             <h1 class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">Societies and Enterprises</h1>
             <p class="text-sm text-gray-500 mb-8">Powered by COSMOS MEDIACUBE</p>
             
             <!-- Search Bar in the center -->
-            <div class="w-full max-w-xl mb-12">
-                <input type="text" id="search-input" placeholder="Search..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
+            <div class="w-full relative mb-8">
+                <input type="text" id="search-input" placeholder="Search files..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
             </div>
 
-            <!-- Scroll Indicator Prompt -->
-            <div id="scroll-prompt" class="text-xs text-gray-400 animate-bounce mt-8 flex flex-col items-center gap-1">
-                <span>Scroll down to view files</span>
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            <!-- 5 Files Displayed Side-by-Side as Small Squares -->
+            <div id="files-section" class="w-full flex flex-col gap-3 transition-all duration-300">
+                <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full"></div>
             </div>
-        </div>
-
-        <!-- 6 by 5 Grid Section (Hidden initially, revealed on scroll) -->
-        <div id="grid-container" class="w-full max-w-7xl px-4 py-12 opacity-0 translate-y-10 transition-all duration-700 pointer-events-none">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6 border-b border-gray-100 pb-3">Available Files</h2>
-            <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
         </div>
 
         <!-- Reader / Viewer View -->
@@ -107,28 +100,27 @@
         import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
         const SUPABASE_URL = 'https://vyfyhxirpmptnoipzsvm.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
-        
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = 1.5;
         let isSignUpMode = false;
         let allFiles = []; 
-        let hasRevealedGrid = false;
         const canvas = document.getElementById('pdf-canvas');
         const ctx = canvas.getContext('2d');
         const imgElement = document.getElementById('media-img');
+        const searchInput = document.getElementById('search-input');
+        const filesSection = document.getElementById('files-section');
 
-        // Scroll listener to reveal the 6x5 grid
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 40 && !hasRevealedGrid) {
-                hasRevealedGrid = true;
-                const grid = document.getElementById('grid-container');
-                grid.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
-                document.getElementById('scroll-prompt').style.opacity = '0';
-            } else if (window.scrollY <= 10 && hasRevealedGrid) {
-                // Optional: reset if scrolled right back to the very top
-                // hasRevealedGrid = false;
+        // Hide files when clicking/focusing on the search bar
+        searchInput.addEventListener('focus', () => {
+            filesSection.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+        });
+
+        // Show files back when clicking away from search if empty
+        searchInput.addEventListener('blur', () => {
+            if (searchInput.value.trim() === '') {
+                filesSection.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
             }
         });
 
@@ -217,13 +209,14 @@
                 return;
             }
             allFiles = data || [];
-            renderFiles(allFiles);
+            // Slice to show only the latest 5 files side-by-side initially
+            renderFiles(allFiles.slice(0, 5));
         }
 
         function renderFiles(files) {
             const listEl = document.getElementById('pdf-list');
             if (!files || files.length === 0) {
-                listEl.innerHTML = `<div class="col-span-full text-center py-16 text-gray-400"><p class="text-sm">No media files found.</p></div>`;
+                listEl.innerHTML = `<div class="col-span-full text-center py-6 text-gray-400 text-sm">No media files found.</div>`;
                 return;
             }
 
@@ -234,13 +227,13 @@
                 const safeName = escapeHtml(file.name);
 
                 return `
-                    <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm hover:border-blue-400 hover:shadow transition flex flex-col justify-between gap-4 group">
+                    <div class="bg-white border border-gray-200 p-4 rounded-2xl shadow-sm hover:border-blue-400 hover:shadow transition flex flex-col justify-between aspect-square group">
                         <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
-                            <h3 class="font-medium text-gray-800 text-sm truncate mt-1" title="${safeName}">${safeName}</h3>
+                            <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
+                            <h3 class="font-medium text-gray-800 text-xs line-clamp-2 mt-1" title="${safeName}">${safeName}</h3>
                         </div>
-                        <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn w-full bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-lg transition font-medium border border-gray-200 group-hover:border-blue-600">
-                            View File
+                        <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-xl transition font-medium border border-gray-200 group-hover:border-blue-600 w-full">
+                            View
                         </button>
                     </div>
                 `;
@@ -251,10 +244,16 @@
             });
         }
 
-        document.getElementById('search-input').addEventListener('input', (e) => {
+        // Live Search Handling
+        searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
-            const filtered = allFiles.filter(file => file.name.toLowerCase().includes(query));
-            renderFiles(filtered);
+            if (query.trim() === '') {
+                filesSection.classList.add('opacity-0', 'pointer-events-none');
+            } else {
+                filesSection.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                const filtered = allFiles.filter(file => file.name.toLowerCase().includes(query));
+                renderFiles(filtered);
+            }
         });
 
         document.getElementById('file-upload').addEventListener('change', async (e) => {
@@ -286,7 +285,6 @@
 
         async function openMedia(url, name) {
             document.getElementById('homescreen-view').classList.add('hidden');
-            document.getElementById('grid-container').classList.add('hidden');
             document.getElementById('reader-view').classList.remove('hidden');
             document.getElementById('reader-view').classList.add('flex');
 
@@ -333,9 +331,9 @@
             document.getElementById('reader-view').classList.add('hidden');
             document.getElementById('navigation-controls').classList.add('hidden');
             document.getElementById('homescreen-view').classList.remove('hidden');
-            document.getElementById('grid-container').classList.remove('hidden');
+            filesSection.classList.remove('opacity-0', 'pointer-events-none');
             imgElement.src = '';
-            document.getElementById('search-input').value = '';
+            searchInput.value = '';
             loadPublicLibrary();
         });
 
