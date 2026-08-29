@@ -10,22 +10,19 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
 </head>
-<body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans">
+<body class="bg-white text-gray-900 min-h-screen flex flex-col font-sans overflow-hidden">
 
-    <!-- Top Navigation / Header -->
-    <header class="w-full px-8 py-6 flex items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-40">
+    <header class="w-full px-8 py-6 flex items-center justify-between border-b border-gray-100 bg-white/80 backdrop-blur sticky top-0 z-40 shrink-0">
         <button id="home-btn" class="text-xl font-semibold tracking-wider text-gray-900 hover:text-blue-600 transition text-left flex items-center gap-2">
-            COSMOS MEDIACUBE
+            MEDIA CUBE
         </button>
         
         <div class="flex items-center gap-4">
-            <!-- Upload Button (Hidden until logged in) -->
             <label id="upload-container" class="hidden cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition shadow-sm">
                 <span>Upload Media</span>
                 <input type="file" id="file-upload" accept="application/pdf,image/*" class="hidden">
             </label>
 
-            <!-- Auth Status / Login Button -->
             <div id="auth-section">
                 <button id="open-auth-modal" class="bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium transition">
                     Log In / Sign Up
@@ -33,15 +30,13 @@
             </div>
         </div>
 
-        <!-- PDF Pagination Controls -->
         <div id="navigation-controls" class="hidden items-center gap-3">
-            <button id="prev-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">Previous</button>
+            <button id="prev-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50 transition cursor-pointer">Previous</button>
             <span class="text-sm text-gray-600">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
-            <button id="next-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50">Next</button>
+            <button id="next-page" class="bg-gray-50 hover:bg-gray-100 border border-gray-200 px-3 py-1.5 rounded-lg text-sm disabled:opacity-50 transition cursor-pointer">Next</button>
         </div>
     </header>
 
-    <!-- Auth Modal -->
     <div id="auth-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div class="bg-white border border-gray-200 p-8 rounded-2xl w-full max-w-md shadow-2xl relative">
             <button id="close-auth-modal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl">&times;</button>
@@ -68,31 +63,34 @@
         </div>
     </div>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex flex-col items-center p-8 overflow-auto">
+    <main class="flex-1 flex flex-col items-center p-8 overflow-auto relative">
         
-        <!-- Hero Section with Centered Search Bar -->
         <div id="homescreen-view" class="w-full max-w-4xl flex flex-col items-center mt-12 transition-all">
             <h1 class="text-4xl font-semibold tracking-tight text-gray-900 mb-2">MEDIA CUBE</h1>
             <p class="text-sm text-gray-500 mb-8">Powered by COSMOS</p>
             
-            <!-- Search Bar in the center -->
             <div class="w-full relative mb-8">
                 <input type="text" id="search-input" placeholder="Search files..." class="w-full bg-gray-50 border border-gray-200 rounded-full px-6 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 outline-none shadow-sm transition">
             </div>
 
-            <!-- 5 Files Displayed Side-by-Side as Small Squares -->
             <div id="files-section" class="w-full flex flex-col gap-3 transition-all duration-300">
                 <div id="pdf-list" class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full"></div>
             </div>
         </div>
 
-        <!-- Reader / Viewer View -->
-        <div id="reader-view" class="hidden flex-col items-center justify-center w-full h-full my-auto">
-            <div id="pdf-container" class="hidden shadow-2xl bg-white rounded-xl overflow-hidden border border-gray-200">
-                <canvas id="pdf-canvas"></canvas>
+        <div id="reader-view" class="hidden flex-col items-center justify-center w-full h-full absolute inset-0 bg-white z-30 p-4">
+            
+            <button id="floating-prev" class="hidden fixed left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button id="floating-next" class="hidden fixed right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 border border-gray-200 p-3 rounded-full shadow-lg transition z-40 items-center justify-center backdrop-blur">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+            </button>
+
+            <div id="pdf-container" class="hidden shadow-xl bg-white rounded-xl overflow-hidden border border-gray-200 max-h-[calc(100vh-140px)] flex items-center justify-center">
+                <canvas id="pdf-canvas" class="max-h-[calc(100vh-140px)] w-auto object-contain"></canvas>
             </div>
-            <img id="media-img" class="hidden max-h-[75vh] max-w-full shadow-2xl rounded-xl object-contain bg-gray-100" alt="Media Preview">
+            <img id="media-img" class="hidden max-h-[calc(100vh-140px)] max-w-full shadow-xl rounded-xl object-contain bg-gray-50" alt="Media Preview">
         </div>
     </main>
 
@@ -103,7 +101,8 @@
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ5ZnloeGlycG1wdG5vaXB6c3ZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc5OTUxNzQsImV4cCI6MjEwMzU3MTE3NH0.GmR_cUgMP9TzpMotCh-DmPseUgyCSNoVaNsEhN5OEMo';
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null, scale = 1.5;
+        let pdfDoc = null, pageNum = 1, pageRendering = false, pageNumPending = null;
+        let currentPdfUrl = null;
         let isSignUpMode = false;
         let allFiles = []; 
         const canvas = document.getElementById('pdf-canvas');
@@ -209,7 +208,6 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 return;
             }
             allFiles = data || [];
-            // Slice to show only the latest 5 files side-by-side initially
             renderFiles(allFiles.slice(0, 5));
         }
 
@@ -232,7 +230,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                             <span class="text-[9px] w-fit px-2 py-0.5 rounded border font-semibold tracking-wider uppercase ${badgeColor}">${badgeText}</span>
                             <h3 class="font-medium text-gray-800 text-xs line-clamp-2 mt-1" title="${safeName}">${safeName}</h3>
                         </div>
-                        <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-xl transition font-medium border border-gray-200 group-hover:border-blue-600 w-full">
+                        <button data-url="${file.file_url}" data-name="${safeName}" class="read-btn bg-gray-50 text-gray-700 group-hover:bg-blue-600 group-hover:text-white text-xs py-2 rounded-xl transition font-medium border border-gray-200 group-hover:border-blue-600 w-full cursor-pointer">
                             View
                         </button>
                     </div>
@@ -284,6 +282,7 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         });
 
         async function openMedia(url, name) {
+            currentPdfUrl = url;
             document.getElementById('homescreen-view').classList.add('hidden');
             document.getElementById('reader-view').classList.remove('hidden');
             document.getElementById('reader-view').classList.add('flex');
@@ -292,6 +291,8 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
             if (isImage) {
                 canvas.parentElement.classList.add('hidden');
+                document.getElementById('floating-prev').classList.add('hidden');
+                document.getElementById('floating-next').classList.add('hidden');
                 imgElement.src = url;
                 imgElement.classList.remove('hidden');
                 document.getElementById('navigation-controls').classList.add('hidden');
@@ -300,6 +301,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
                 canvas.parentElement.classList.remove('hidden');
                 document.getElementById('navigation-controls').classList.remove('hidden');
                 document.getElementById('navigation-controls').classList.add('flex');
+                document.getElementById('floating-prev').classList.remove('hidden');
+                document.getElementById('floating-prev').classList.add('flex');
+                document.getElementById('floating-next').classList.remove('hidden');
+                document.getElementById('floating-next').classList.add('flex');
 
                 pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
                     pdfDoc = pdfDoc_;
@@ -311,29 +316,72 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
         }
 
         function renderPage(num) {
+            if (!pdfDoc) return;
             pageRendering = true;
             pdfDoc.getPage(num).then(function(page) {
+                // Automatically calculate scale to fit the entire screen height cleanly
+                const containerHeight = window.innerHeight - 180;
+                const unscaledViewport = page.getViewport({ scale: 1 });
+                const scale = containerHeight / unscaledViewport.height;
+
                 const viewport = page.getViewport({ scale: scale });
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
+                
                 page.render({ canvasContext: ctx, viewport: viewport }).promise.then(() => {
                     pageRendering = false;
-                    if (pageNumPending !== null) { renderPage(pageNumPending); pageNumPending = null; }
+                    if (pageNumPending !== null) { 
+                        renderPage(pageNumPending); 
+                        pageNumPending = null; 
+                    }
                 });
             });
             document.getElementById('current-page').textContent = num;
         }
 
-        document.getElementById('prev-page').addEventListener('click', () => { if (pageNum > 1) renderPage(--pageNum); });
-        document.getElementById('next-page').addEventListener('click', () => { if (pageNum < pdfDoc.numPages) renderPage(++pageNum); });
+        function goToPrevPage() {
+            if (pageNum > 1) {
+                pageNum--;
+                renderPage(pageNum);
+            }
+        }
+
+        function goToNextPage() {
+            if (pdfDoc && pageNum < pdfDoc.numPages) {
+                pageNum++;
+                renderPage(pageNum);
+            }
+        }
+
+        // Button control bindings
+        document.getElementById('prev-page').addEventListener('click', goToPrevPage);
+        document.getElementById('next-page').addEventListener('click', goToNextPage);
+        document.getElementById('floating-prev').addEventListener('click', goToPrevPage);
+        document.getElementById('floating-next').addEventListener('click', goToNextPage);
+
+        // Arrow keys keyboard shortcut support
+        window.addEventListener('keydown', (e) => {
+            if (!document.getElementById('reader-view').classList.contains('hidden') && pdfDoc) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    goToPrevPage();
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    goToNextPage();
+                }
+            }
+        });
         
         document.getElementById('home-btn').addEventListener('click', () => {
             document.getElementById('reader-view').classList.add('hidden');
             document.getElementById('navigation-controls').classList.add('hidden');
+            document.getElementById('floating-prev').classList.add('hidden');
+            document.getElementById('floating-next').classList.add('hidden');
             document.getElementById('homescreen-view').classList.remove('hidden');
             filesSection.classList.remove('opacity-0', 'pointer-events-none');
             imgElement.src = '';
             searchInput.value = '';
+            pdfDoc = null;
             loadPublicLibrary();
         });
 
